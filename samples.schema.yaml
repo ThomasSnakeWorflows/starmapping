@@ -1,0 +1,18 @@
+$schema: http://json-schema.org/draft-04/schema#
+description: an entry in the sample sheet
+properties:
+  sample:
+    type: [integer,string]
+    description: sample name/identifier
+  R1:
+    type: string
+    description: the forward reads
+  R2:
+    type: string
+    description: the backward reads
+
+required:
+  - sample
+  - R1
+  - R2
+

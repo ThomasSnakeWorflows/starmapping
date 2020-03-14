@@ -1,0 +1,4 @@
+star_refdir: "/home/faraut/dynawork/CircRNA/data/bos_taurus/genome/starindex/starRef"
+samples: "samples.tsv"
+wdir: "/home/faraut/dynawork/CircRNA/mapping/bos_taurus/liver/star/mapping"
+pval-threshold: 1e-4
