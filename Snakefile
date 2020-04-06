@@ -22,20 +22,22 @@ def get_fastq(wildcards):
 configfile: "config.yaml"
 
 STAR_REFDIR = config['star_refdir']
+modes = config['modes']
 
 samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=False)
 validate(samples, "samples.schema.yaml")
 
-WDIR = config['wdir']
-workdir: WDIR
-message("The current working directory is " + WDIR)
+workdir: config['wdir']
+message("The current working directory is " + config['wdir'])
 
-orientations = ['R1', 'R2']
+if "pe" in modes:
+    orientations = ['R1', 'R2']
+else:
+    orientations = ['R1']
 
 rule all:
     input:
-        "se.done",
-        "pe.done"
+        expand("{mode}.done", mode=modes)
 
 rule se:
     input:
@@ -70,7 +72,7 @@ rule starpe:
         "{sample}/pe/Log.final.out",
         "{sample}/pe/Aligned.sortedByCoord.out.bam"
     params:
-        starrefdir = config['star_refdir']
+        starrefdir = config['starrefdir']
     log:
         "logs/star/{sample}.log"
     threads: 8
@@ -102,7 +104,7 @@ rule starse:
         "{sample}/se/{orient}/Log.final.out",
         "{sample}/se/{orient}/Aligned.sortedByCoord.out.bam"
     params:
-        starrefdir = config['star_refdir']
+        starrefdir = config['starrefdir']
     log:
         "logs/star/{sample}_{orient}.log"
     threads: 8

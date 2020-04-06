@@ -1,4 +1,16 @@
-star_refdir: "/home/faraut/dynawork/CircRNA/data/bos_taurus/genome/starindex/starRef"
+
+ref:
+  name: test
+  # reference genome fasta file
+  fasta: testdata/genome.fa
+  # refernece genome gtf file
+  gtf: testdata/genome.gtf
+
+starrefdir: "starindex"
+
 samples: "samples.tsv"
-wdir: "/home/faraut/dynawork/CircRNA/mapping/bos_taurus/liver/star/mapping"
+wdir: "mapping"
+modes:
+  - se
+  - pe
 pval-threshold: 1e-4

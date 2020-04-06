@@ -2,3 +2,9 @@ __default__:
   mem: 8
   name: "{rule}.{wildcards}"
   time: "24:00:00"
+
+star_prepare:
+  mem: 32
+
+rsem_prepare:
+  mem: 32
