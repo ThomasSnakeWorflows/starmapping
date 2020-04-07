@@ -5,7 +5,8 @@ import yaml
 
 from os.path import join
 import pandas as pd
-from snakemake.utils import validate
+# validate is only available from sbakemake 5.1
+#from snakemake.utils import validate
 
 
 def message(mes):
@@ -21,11 +22,10 @@ def get_fastq(wildcards):
 
 configfile: "config.yaml"
 
-STAR_REFDIR = config['star_refdir']
 modes = config['modes']
 
 samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=False)
-validate(samples, "samples.schema.yaml")
+#validate(samples, "samples.schema.yaml")
 
 workdir: config['wdir']
 message("The current working directory is " + config['wdir'])

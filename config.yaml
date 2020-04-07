@@ -6,7 +6,7 @@ ref:
   # refernece genome gtf file
   gtf: testdata/genome.gtf
 
-starrefdir: "starindex"
+starrefdir: "_PATHTO_/starindex"
 
 samples: "samples.tsv"
 wdir: "mapping"

@@ -3,7 +3,7 @@
 ```bash
 module load bioinfo/STAR-2.6.0c
 module load bioinfo/RSEM-1.3.3
-module load bioinfo/snakemake-4.5.1
+module load bioinfo/snakemake-4.8.0
 ```
 
 ```bash
