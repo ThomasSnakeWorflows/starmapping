@@ -4,7 +4,8 @@ __default__:
   time: "24:00:00"
 
 star_prepare:
-  mem: 32
+  mem: 16
+  threads: 8
 
 rsem_prepare:
-  mem: 32
+  mem: 38

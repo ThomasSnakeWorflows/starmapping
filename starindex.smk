@@ -3,6 +3,15 @@ import re
 import os
 
 
+def get_threads(rule, default):
+    cluster_config = snakemake.workflow.cluster_config
+    if rule in cluster_config and "threads" in cluster_config[rule]:
+        return cluster_config[rule]["threads"]
+    if "default" in cluster_config and "threads" in cluster_config["default"]:
+        return cluster_config["default"]["threads"]
+    return default
+
+
 def get_all_output(wildcards):
     outputs = []
     if "starrefdir" in config:
@@ -31,7 +40,7 @@ rule star_prepare:
         starrefdir=config['starrefdir']
     log:
         "logs/star_prepare.log"
-    threads: 2
+    threads: get_threads("star_prepare", 4)
     shell:
         "STAR"
         " --runThreadN {threads}"
