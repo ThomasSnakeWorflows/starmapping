@@ -67,7 +67,7 @@ rule pe:
 
 rule persem:
     input:
-        expand("{sample}/pe/Log.final.out",
+        expand("{sample}/Aligned.toTranscriptome.out.bam",
                sample=samples.index),
         expand("{sample}/Quant.genes.results",
                sample=samples.index)
