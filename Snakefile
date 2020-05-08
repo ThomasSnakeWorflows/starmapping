@@ -15,14 +15,17 @@ def message(mes):
 
 def get_fastq(wildcards):
     if hasattr(wildcards, "orient"):
-        return samples.loc[wildcards.sample, wildcards.orient]
+        r = samples.loc[wildcards.sample, wildcards.orient]
+        return {'R': r}
     else:
-        return samples.loc[wildcards.sample, ['R1', 'R2']].dropna()
+        r1, r2 = samples.loc[wildcards.sample, ['R1', 'R2']].dropna()
+        return {'R1': r1, 'R2' : r2}
 
 
 configfile: "config.yaml"
 
 modes = config['modes']
+print(modes)
 
 samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=False)
 #validate(samples, "samples.schema.yaml")
@@ -34,6 +37,11 @@ if "pe" in modes:
     orientations = ['R1', 'R2']
 else:
     orientations = ['R1']
+
+
+wildcard_constraints:
+    sample="|".join(samples.index),
+
 
 rule all:
     input:
@@ -57,6 +65,15 @@ rule pe:
     output:
         touch("pe.done")
 
+rule persem:
+    input:
+        expand("{sample}/pe/Log.final.out",
+               sample=samples.index),
+        expand("{sample}/Quant.genes.results",
+               sample=samples.index)
+    output:
+        touch("persem.done")
+
 rule index:
     input:
         "{prefix}/Aligned.sortedByCoord.out.bam"
@@ -67,7 +84,7 @@ rule index:
 
 rule starpe:
     input:
-        get_fastq
+        unpack(get_fastq)
     output:
         "{sample}/pe/Log.final.out",
         "{sample}/pe/Aligned.sortedByCoord.out.bam"
@@ -81,7 +98,7 @@ rule starpe:
         " --runThreadN {threads}"
         " --genomeDir {params.starrefdir}"
         " --outSAMtype BAM SortedByCoordinate"
-        " --readFilesIn {input}"
+        " --readFilesIn {input.R1} {input.R2}"
         " --readFilesCommand zcat "
         " --outFileNamePrefix {wildcards.sample}/pe/"
         " --outReadsUnmapped Fastx"
@@ -97,9 +114,61 @@ rule starpe:
         " --chimScoreSeparation 10"
         " --chimJunctionOverhangMin 15"
 
+rule starrsem:
+    input:
+        unpack(get_fastq),
+        gtf = config['ref']['gtf']
+    output:
+        "{sample}/Log.final.out",
+        "{sample}/Aligned.sortedByCoord.out.bam",
+        "{sample}/Aligned.toTranscriptome.out.bam"
+    params:
+        starrefdir = config['starrefdir']
+    log:
+        "logs/star/{sample}.log"
+    threads: 4
+    shell:
+        "STAR --genomeDir {params.starrefdir} STARgenomeDir "
+        " --readFilesIn {input.R1} {input.R2}"
+        " --readFilesCommand zcat --outFilterType BySJout"
+        " --outSAMunmapped Within --sjdbGTFfile {input.gtf}"
+        " --outSAMattrIHstart 0"
+        " --outFilterIntronMotifs RemoveNoncanonical" # for cufflinks
+        " --alignSoftClipAtReferenceEnds Yes" # for cufflinks
+        " --outSAMstrandField intronMotif " # for unstranded RNAseq data
+        " --outSAMattributes NH HI AS NM MD"
+        " --outFilterMultimapNmax 20"
+        " --outFilterMismatchNmax 999"
+        " --alignIntronMin 20"
+        " --alignIntronMax 1000000"
+        " --alignMatesGapMax 1000000"
+        " --alignSJoverhangMin 8  --alignSJDBoverhangMin 1 "
+        " --runThreadN {threads}"
+        " --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM"
+        " --outWigType bedGraph  --outWigStrand Unstranded"
+        " --outFileNamePrefix {wildcards.sample}/ 2> {log}"
+
+
+rule rsem:
+    input:
+        "{sample}/Aligned.toTranscriptome.out.bam"
+    output:
+         "{sample}/Quant.genes.results"
+    params:
+        rsem_prefix = config['rsemprefix']
+    log:
+        "logs/rsem/{sample}.log"
+    threads: 4
+    shell:
+        "rsem-calculate-expression -p {threads} --paired-end --bam --estimate-rspd "
+        "--calc-ci --no-bam-output --seed 12345 "
+        "-p {threads} {input} {params.rsem_prefix} "
+        "{wildcards.sample}/Quant 2> {log} "
+
+
 rule starse:
     input:
-        get_fastq
+        unpack(get_fastq)
     output:
         "{sample}/se/{orient}/Log.final.out",
         "{sample}/se/{orient}/Aligned.sortedByCoord.out.bam"
