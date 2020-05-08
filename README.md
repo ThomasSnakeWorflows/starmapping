@@ -12,5 +12,5 @@ snakemake --jobs 30 --cluster-config cluster.yaml --drmaa " --mem-per-cpu={clust
 
 If star index is not available
 ```bash
-snakemake -s starindex.smk --jobs 2 --cluster-config cluster.yaml --drmaa " --mem-per-cpu={cluster.mem}000 --mincpus={threads} --time={cluster.time} -J {cluster.name} -N 1=1" -p -n
+snakemake -s Snakestarindex.smk --jobs 2 --cluster-config cluster.yaml --drmaa " --mem-per-cpu={cluster.mem}000 --mincpus={threads} --time={cluster.time} -J {cluster.name} -N 1=1" -p -n
 ```
