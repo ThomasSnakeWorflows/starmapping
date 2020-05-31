@@ -33,7 +33,7 @@ samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=F
 workdir: config['wdir']
 message("The current working directory is " + config['wdir'])
 
-if "pe" in modes:
+if "pe" in modes or "persem" in modes:
     orientations = ['R1', 'R2']
 else:
     orientations = ['R1']
@@ -67,7 +67,7 @@ rule pe:
 
 rule persem:
     input:
-        expand("{sample}/Quant.genes.results",
+        expand("{sample}/persem/Quant.genes.results",
                sample=samples.index)
     output:
         touch("persem.done")
@@ -117,13 +117,13 @@ rule starrsem:
         unpack(get_fastq),
         gtf = config['ref']['gtf']
     output:
-        "{sample}/Log.final.out",
-        "{sample}/Aligned.sortedByCoord.out.bam",
-        "{sample}/Aligned.toTranscriptome.out.bam"
+        "{sample}/persem/Log.final.out",
+        "{sample}/persem/Aligned.sortedByCoord.out.bam",
+        "{sample}/persem/Aligned.toTranscriptome.out.bam"
     params:
         starrefdir = config['starrefdir']
     log:
-        "logs/star/{sample}.log"
+        "logs/star/persem/{sample}.log"
     threads: 4
     shell:
         "STAR --genomeDir {params.starrefdir} STARgenomeDir "
@@ -144,14 +144,14 @@ rule starrsem:
         " --runThreadN {threads}"
         " --outSAMtype BAM SortedByCoordinate --quantMode TranscriptomeSAM"
         " --outWigType bedGraph  --outWigStrand Unstranded"
-        " --outFileNamePrefix {wildcards.sample}/ 2> {log}"
+        " --outFileNamePrefix {wildcards.sample}/persem/ 2> {log}"
 
 
 rule rsem:
     input:
-        "{sample}/Aligned.toTranscriptome.out.bam"
+        "{sample}/persem/Aligned.toTranscriptome.out.bam"
     output:
-         "{sample}/Quant.genes.results"
+         "{sample}/persem/Quant.genes.results"
     params:
         rsem_prefix = config['rsemprefix']
     log:
