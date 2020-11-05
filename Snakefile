@@ -35,7 +35,7 @@ configfile: "config.yaml"
 modes = config['modes']
 print(modes)
 
-samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=False)
+samples = pd.read_table(config["samples"], comment='#', dtype=str).set_index("sample", drop=False)
 #validate(samples, "samples.schema.yaml")
 
 workdir: config['wdir']
