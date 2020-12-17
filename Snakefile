@@ -173,7 +173,7 @@ rule rsem:
         "rsem-calculate-expression -p {threads} --paired-end --bam --estimate-rspd "
         "--calc-ci --no-bam-output --seed 12345 "
         "-p {threads} {input} {params.rsem_prefix} "
-        "{wildcards.sample}/Quant 2> {log} "
+        "{wildcards.sample}/persem/Quant 2> {log} "
 
 
 rule starse:
