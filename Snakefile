@@ -22,12 +22,20 @@ def get_fastq(wildcards):
         return {'R1': r1, 'R2' : r2}
 
 
+def get_fastq_files(wildcards):
+    fastqs = get_fastq(wildcards)
+    files = []
+    for reads in fastqs.values():
+        files.extend(reads.split(','))
+    return files
+
+
 configfile: "config.yaml"
 
 modes = config['modes']
 print(modes)
 
-samples = pd.read_table(config["samples"], dtype=str).set_index("sample", drop=False)
+samples = pd.read_table(config["samples"], comment='#', dtype=str).set_index("sample", drop=False)
 #validate(samples, "samples.schema.yaml")
 
 workdir: config['wdir']
@@ -82,11 +90,13 @@ rule index:
 
 rule starpe:
     input:
-        unpack(get_fastq)
+        get_fastq_files
     output:
         "{sample}/pe/Log.final.out",
         "{sample}/pe/Aligned.sortedByCoord.out.bam"
     params:
+        R1 =  lambda wildcards: get_fastq(wildcards)['R1'],
+        R2 =  lambda wildcards: get_fastq(wildcards)['R2'],
         starrefdir = config['starrefdir']
     log:
         "logs/star/{sample}.log"
@@ -96,7 +106,7 @@ rule starpe:
         " --runThreadN {threads}"
         " --genomeDir {params.starrefdir}"
         " --outSAMtype BAM SortedByCoordinate"
-        " --readFilesIn {input.R1} {input.R2}"
+        " --readFilesIn {params.R1} {params.R2}"
         " --readFilesCommand zcat "
         " --outFileNamePrefix {wildcards.sample}/pe/"
         " --outReadsUnmapped Fastx"
@@ -114,20 +124,22 @@ rule starpe:
 
 rule starrsem:
     input:
-        unpack(get_fastq),
+        get_fastq_files,
         gtf = config['ref']['gtf']
     output:
         "{sample}/persem/Log.final.out",
         "{sample}/persem/Aligned.sortedByCoord.out.bam",
         "{sample}/persem/Aligned.toTranscriptome.out.bam"
     params:
+        R1 =  lambda wildcards: get_fastq(wildcards)['R1'],
+        R2 =  lambda wildcards: get_fastq(wildcards)['R2'],
         starrefdir = config['starrefdir']
     log:
         "logs/star/persem/{sample}.log"
     threads: 4
     shell:
         "STAR --genomeDir {params.starrefdir} STARgenomeDir "
-        " --readFilesIn {input.R1} {input.R2}"
+        " --readFilesIn {params.R1} {params.R2}"
         " --readFilesCommand zcat --outFilterType BySJout"
         " --outSAMunmapped Within --sjdbGTFfile {input.gtf}"
         " --outSAMattrIHstart 0"
@@ -166,11 +178,12 @@ rule rsem:
 
 rule starse:
     input:
-        unpack(get_fastq)
+        get_fastq_files
     output:
         "{sample}/se/{orient}/Log.final.out",
         "{sample}/se/{orient}/Aligned.sortedByCoord.out.bam"
     params:
+        R =  lambda wildcards: get_fastq(wildcards)['R'],
         starrefdir = config['starrefdir']
     log:
         "logs/star/{sample}_{orient}.log"
@@ -180,7 +193,7 @@ rule starse:
         " --runThreadN {threads}"
         " --genomeDir {params.starrefdir}"
         " --outSAMtype BAM SortedByCoordinate"
-        " --readFilesIn {input}"
+        " --readFilesIn {params.R}"
         " --readFilesCommand zcat"
         " --outFileNamePrefix {wildcards.sample}/se/{wildcards.orient}/"
         " --outReadsUnmapped Fastx"
