@@ -59,7 +59,7 @@ if "rsemprefix" in config:
             fa=reference_fasta,
             gtf=reference_gtf
         output:
-            config['rsemprefix']+".seq"
+            config['rsemprefix']+"/RSEMref.seq"
         params:
             refsemrefprefix=config['rsemprefix']
         log:
